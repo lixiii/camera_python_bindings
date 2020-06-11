@@ -103,7 +103,95 @@ CameraBuffer get_frame()
     return CameraBuffer(camera_buffer, tCapability.sResolutionRange.iHeightMax, tCapability.sResolutionRange.iWidthMax);
 }
 
-PYBIND11_MODULE(camera_capture, m) {
+int init() 
+{
+    int iCameraCounts = 4;
+    int iStatus = -1;
+    tSdkCameraDevInfo tCameraEnumList[4];
+    int hCamera;
+    tSdkCameraCapbility tCapability;
+    int i = 0;
+    int num = 0;
+
+    CameraSdkInit(1);
+    CameraEnumerateDevice(tCameraEnumList, &iCameraCounts);
+
+    BOOL openStatus[4];
+    CameraIsOpened(tCameraEnumList, openStatus);
+
+    if (iCameraCounts == 0)
+    {
+        throw std::runtime_error("No cameras found");
+    } 
+    if (openStatus[num] == true){
+        printf("Camera already initialised.");
+        return 0;
+    }
+
+    iStatus = CameraInit(&tCameraEnumList[num], -1, -1, &hCamera);
+    if (iStatus != CAMERA_STATUS_SUCCESS)
+    {
+        throw std::runtime_error("Camera init failed");
+    }
+
+    CameraGetCapability(hCamera, &tCapability);
+
+    CameraPlay(hCamera);
+
+    CameraSetImageResolution(hCamera, &tCapability.pImageSizeDesc[0]);
+
+    if (tCapability.sIspCapacity.bMonoSensor)
+    {
+        CameraSetIspOutFormat(hCamera, CAMERA_MEDIA_TYPE_MONO8);
+    }
+    else
+    {
+        CameraSetIspOutFormat(hCamera, CAMERA_MEDIA_TYPE_RGB8);
+    }
+
+    return hCamera;
+}
+
+CameraBuffer capture(int hCamera)
+{
+    int iCameraCounts = 4;
+    tSdkFrameHead sFrameInfo;
+    BYTE *pbyBuffer;
+    unsigned char *g_pRgbBuffer;
+    std::vector<uint8_t> camera_buffer;
+
+    if (CameraGetImageBuffer(hCamera, &sFrameInfo, &pbyBuffer, 2000) == CAMERA_STATUS_SUCCESS)
+    {
+        int image_buffer_size = sFrameInfo.iHeight * sFrameInfo.iWidth * 3;
+        g_pRgbBuffer = (unsigned char *)malloc(image_buffer_size);
+
+        CameraImageProcess(hCamera, pbyBuffer, g_pRgbBuffer, &sFrameInfo);
+
+        camera_buffer.insert(camera_buffer.begin(), g_pRgbBuffer, g_pRgbBuffer + image_buffer_size);
+        // camera_buffer.erase(camera_buffer.begin(), camera_buffer.end());
+
+        CameraReleaseImageBuffer(hCamera, pbyBuffer);
+    }
+    else
+    {
+        throw std::runtime_error("Cameras capture timedout");
+    }
+
+    free(g_pRgbBuffer);
+
+    return CameraBuffer(camera_buffer, sFrameInfo.iHeight, sFrameInfo.iWidth);
+}
+
+int close(int hCamera)
+{
+    if (CameraUnInit(hCamera) != CAMERA_STATUS_SUCCESS) {
+        throw std::runtime_error("Camera UnInit failed");
+    } else {
+        return  0;
+    }
+}
+
+PYBIND11_MODULE(_camera, m) {
 
     py::class_<CameraBuffer>(m, "CameraBuffer", py::buffer_protocol())
     .def_buffer([](CameraBuffer &buf) -> py::buffer_info {
@@ -117,7 +205,10 @@ PYBIND11_MODULE(camera_capture, m) {
         );
     });
 
-    m.def("capture", &get_frame);
+    // m.def("capture", &get_frame);
+    m.def("init", &init);
+    m.def("capture", &capture);
+    m.def("close", &close);
 
 }
 
