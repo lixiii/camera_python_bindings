@@ -116,9 +116,16 @@ int init()
     CameraSdkInit(1);
     CameraEnumerateDevice(tCameraEnumList, &iCameraCounts);
 
+    BOOL openStatus[4];
+    CameraIsOpened(tCameraEnumList, openStatus);
+
     if (iCameraCounts == 0)
     {
         throw std::runtime_error("No cameras found");
+    } 
+    if (openStatus[num] == true){
+        printf("Camera already initialised.");
+        return 0;
     }
 
     iStatus = CameraInit(&tCameraEnumList[num], -1, -1, &hCamera);
@@ -175,7 +182,16 @@ CameraBuffer capture(int hCamera)
     return CameraBuffer(camera_buffer, sFrameInfo.iHeight, sFrameInfo.iWidth);
 }
 
-PYBIND11_MODULE(camera, m) {
+int close(int hCamera)
+{
+    if (CameraUnInit(hCamera) != CAMERA_STATUS_SUCCESS) {
+        throw std::runtime_error("Camera UnInit failed");
+    } else {
+        return  0;
+    }
+}
+
+PYBIND11_MODULE(_camera, m) {
 
     py::class_<CameraBuffer>(m, "CameraBuffer", py::buffer_protocol())
     .def_buffer([](CameraBuffer &buf) -> py::buffer_info {
@@ -192,6 +208,7 @@ PYBIND11_MODULE(camera, m) {
     // m.def("capture", &get_frame);
     m.def("init", &init);
     m.def("capture", &capture);
+    m.def("close", &close);
 
 }
 
