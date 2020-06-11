@@ -24,7 +24,7 @@ def gen(camera):
         img = Image.fromarray(np_array)
         img = img.resize((round( img.size[0]/4 ), round( img.size[1]/4 )))
         imgByteArr = io.BytesIO()
-        img.save(imgByteArr, format='JPEG', quality=40)
+        img.save(imgByteArr, format='JPEG', quality=70)
         # print(len(frame))
         yield (b'--frame\r\n'
                b'Content-Type: image/png\r\n\r\n' + imgByteArr.getvalue() + b'\r\n')
