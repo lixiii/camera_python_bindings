@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys, time
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, request, redirect
 from PIL import Image
 import io
 
@@ -14,7 +14,7 @@ app = Flask(__name__, template_folder='./')
 @app.route('/')
 def index():
     """Video streaming home page."""
-    return render_template('index.html')
+    return render_template('index.html', exposure=cam.exposure)
 
 
 def gen(camera):
@@ -22,7 +22,7 @@ def gen(camera):
     while True:
         np_array = camera.capture()
         img = Image.fromarray(np_array)
-        img = img.resize((round( img.size[0]/4 ), round( img.size[1]/4 )))
+        # img = img.resize((round( img.size[0]/4 ), round( img.size[1]/4 )))
         imgByteArr = io.BytesIO()
         img.save(imgByteArr, format='JPEG', quality=70)
         # print(len(frame))
@@ -37,13 +37,17 @@ def video_feed():
     return Response(gen(cam),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
+@app.route("/set_exposure")
+def set_exposure():
+    cam.setExposure( int( request.args["exposure"] ) )
+    return redirect("/")
 
 @app.before_first_request
 def init_camera():
     cam.init()
 if __name__ == '__main__':
     try:
-        app.run(host='0.0.0.0', debug=True, threaded=False)
+        app.run(host='0.0.0.0', debug=True, threaded=True)
     except KeyboardInterrupt: 
         print("Gracefully shutting down")
         cam.close()

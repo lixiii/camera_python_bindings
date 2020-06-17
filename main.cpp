@@ -182,6 +182,21 @@ CameraBuffer capture(int hCamera)
     return CameraBuffer(camera_buffer, sFrameInfo.iHeight, sFrameInfo.iWidth);
 }
 
+int getAETarget(int hCamera)
+{
+    int AETarget;
+    CameraGetAeTarget(hCamera, &AETarget);
+    return AETarget;
+}
+
+int setAETarget(int hCamera, int target)
+{
+    CameraPause(hCamera);
+    int status = CameraSetAeTarget(hCamera, target);
+    CameraPlay(hCamera);
+    return status;
+}
+
 int close(int hCamera)
 {
     if (CameraUnInit(hCamera) != CAMERA_STATUS_SUCCESS) {
@@ -209,6 +224,9 @@ PYBIND11_MODULE(_camera, m) {
     m.def("init", &init);
     m.def("capture", &capture);
     m.def("close", &close);
+
+    m.def("getAETarget", &getAETarget);
+    m.def("setAETarget", &setAETarget);
 
 }
 
