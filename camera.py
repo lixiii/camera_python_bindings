@@ -1,5 +1,6 @@
 import _camera
 import numpy as np 
+from PIL import Image
 
 class Camera: 
     def __init__(self):
@@ -17,6 +18,11 @@ class Camera:
             return np.array(raw_img, copy=False)
         else: 
             return False 
+
+    def save(self, path:str):
+        a = self.capture()
+        img = Image.fromarray(a)
+        img.save(path)
     
     def close(self):
         if self._initialised:

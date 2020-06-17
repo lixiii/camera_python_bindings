@@ -3,12 +3,16 @@
     <title>fabrica.ai Camera Stream</title>
   </head>
   <body>
-    <p>Exposure: {{exposure}}</p>
+    <pre>Exposure: {{exposure}}  |  <span> <a href="/?guides=1">Guides</a></span>  |  <span> <a href="/download">Download full image</a></span> </pre>
     <form action="set_exposure" method="GET">
         <label for="exposure">Exposure Target: </label>
         <input name="exposure" id="exposure" required>
         <input type="submit" value="Set">
     </form>
-    <img style="width:100%" src="{{ url_for('video_feed') }}">
+    {% if guides %}
+        <img style="width:100%" src="{{ url_for('video_feed') }}?guides=1">
+    {% else %}
+        <img style="width:100%" src="{{ url_for('video_feed') }}">
+    {% endif %}
   </body>
 </html>
