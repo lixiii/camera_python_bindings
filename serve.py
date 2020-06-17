@@ -14,7 +14,7 @@ app = Flask(__name__, template_folder='./')
 @app.route('/')
 def index():
     """Video streaming home page."""
-    return render_template('index.html', exposure=cam.exposure, guides = request.args.get("guides"))
+    return render_template('index.html', exposure=cam.exposure, guides = ( request.args.get("guides") ) )
 
 
 def gen(camera, guides:bool=False):
@@ -52,8 +52,8 @@ def set_exposure():
 
 @app.route("/download")
 def download():
-    a = camera.capture() 
-    img = Image.fromarray(np_array)
+    a = cam.capture() 
+    img = Image.fromarray(a)
     imgBytes = io.BytesIO()
     img.save(imgBytes, format='PNG')
     return send_file(

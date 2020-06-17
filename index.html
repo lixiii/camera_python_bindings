@@ -3,7 +3,7 @@
     <title>fabrica.ai Camera Stream</title>
   </head>
   <body>
-    <pre>Exposure: {{exposure}}  |  <span> <a href="/?guides=1">Guides</a></span>  |  <span> <a href="/download">Download full image</a></span> </pre>
+    <pre>Exposure: {{exposure}}  |  <span> <a href="/?guides={{'' if guides else 1}}">Guides</a></span>  |  <span> <a href="/download">Download full image</a></span> </pre>
     <form action="set_exposure" method="GET">
         <label for="exposure">Exposure Target: </label>
         <input name="exposure" id="exposure" required>
