@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys, time
-from flask import Flask, render_template, Response, request, redirect
+from flask import Flask, render_template, Response, request, redirect, send_file
 from PIL import Image, ImageDraw
 import io
 
@@ -28,7 +28,7 @@ def gen(camera, guides:bool=False):
             draw.line((0, round(img.size[1]/2), img.size[0], round(img.size[1]/2)), width=3, fill=(255,100,100))
         # img = img.resize((round( img.size[0]/4 ), round( img.size[1]/4 )))
         imgByteArr = io.BytesIO()
-        img.save(imgByteArr, format='JPEG', quality=70)
+        img.save(imgByteArr, format='JPEG', quality=50)
         # print(len(frame))
         yield (b'--frame\r\n'
                b'Content-Type: image/png\r\n\r\n' + imgByteArr.getvalue() + b'\r\n')
@@ -54,12 +54,12 @@ def set_exposure():
 def download():
     a = cam.capture() 
     img = Image.fromarray(a)
-    imgBytes = io.BytesIO()
-    img.save(imgBytes, format='PNG')
-    return send_file(
-        imgBytes,
+    img.save("/home/pi/python_camera/image.png")
+    return send_file( "image.png",
         mimetype='image/png',
-        as_attachment=True)
+        as_attachment=True) 
+        # attachment_filename="img.jpg")
+    
 
 @app.before_first_request
 def init_camera():
